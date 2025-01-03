@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="icon" href="images/fevicon.png" type="image/gif" />
+</head>
+
+<body class="main-layout">
+
+    <!-- Header -->
+    <header>
+        <div class="header">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col logo_section">
+                        <div class="full">
+                            <div class="center-desk">
+                                <div class="logo">
+                                    <a href="/"><img src="images/logo.png" alt="logo"></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-9 col-lg-9 col-md-9 col-sm-9">
+                        <div class="menu-area">
+                            <div class="limit-box">
+                                <nav class="main-menu">
+                                    <ul class="menu-area-main">
+                                        <li> <a href="/">Home</a> </li>
+                                        <li><a href="#contactejs">Contact Us</a></li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 offset-md-6">
+                        <div class="location_icon_bottum">
+                            <ul>
+                                <li><img src="" /></li>
+                                <li><img src="" /> </li>
+                                <li><img src="" /> </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- End Header -->
+
+    <!-- Cart Section -->
+    <div class="cart">
+        <div class="container">
+            <h2>Shopping Cart</h2>
+
+            <!-- Cart Table -->
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% cart.forEach(item => { %>
+                    <tr data-id="<%= item.id %>" class="cart-item">
+                        <td><img src="images/<%= item.image %>" alt="<%= item.name %>" class="cart-item-image"></td>
+                        <td><%= item.name %></td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary decrease-quantity">-</button>
+                            <input type="number" class="form-control quantity" value="<%= item.quantity %>" min="1" data-price="<%= item.price %>" data-id="<%= item.id %>">
+                            <button class="btn btn-sm btn-secondary increase-quantity">+</button>
+                        </td>
+                        <td>$<%= parseFloat(item.price).toFixed(2) %></td>
+                        <td class="item-total">$<%= (parseFloat(item.price) * item.quantity).toFixed(2) %></td>
+                        <td>
+                            <button class="btn btn-danger remove-item" data-id="<%= item.id %>">Remove</button>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+
+            <!-- Cart Summary -->
+            <div class="cart-summary">
+                <h3>Subtotal: $<span id="subtotal"><%= total.toFixed(2) %></span></h3>
+                <a href="/checkout" class="btn btn-success">Proceed to Checkout</a>
+            </div>
+        </div>
+    </div>
+    <!-- End Cart Section -->
+
+    <!-- Footer -->
+    <footer>
+        <div id="contact" class="footer">
+            <div class="container">
+                <div class="row pdn-top-30">
+                    <div class="col-md-12">
+                        <div class="footer-box">
+                            <div id="contactejs" class="headinga">
+                                <h3>Address</h3>
+                                <span>Cambodia , phnom penh</span>
+                                <p>(+855) 89428016<br>demo@gmail.com</p>
+                            </div>
+                            <ul class="location_icon">
+                                <li><a href="#"><i class="fa fa-facebook-f"></i></a></li>
+                                <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                                <li><a href="#"><i class="fa fa-instagram"></i></a></li>
+                            </ul>
+                            <div class="menu-bottom">
+                                <ul class="link">
+                                    <li> <a href="/">Home</a></li>
+                                    <li> <a href="#aboutejs">About</a></li>
+                                    <li> <a href="#brandejs">Brand</a></li>
+                                    <li> <a href="#specialejs">Specials</a></li>
+                                    <li> <a href="#contactejs">Contact us</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <div class="container">
+                    <p><a href=""> </a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- End Footer -->
+
+    <!-- JavaScript files-->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            // Function to update the total price dynamically
+            function updateTotal() {
+                let subtotal = 0;
+                $('.cart-item').each(function () {
+                    const quantity = parseInt($(this).find('.quantity').val());  // Ensure it's an integer
+                    const price = parseFloat($(this).find('.quantity').data('price'));  // Ensure it's a float
+                    const total = price * quantity;  // Correctly calculate the total price for the item
+                    $(this).find('.item-total').text('$' + total.toFixed(2));  // Update the item total display
+                    subtotal += total;  // Add to subtotal
+                });
+                $('#subtotal').text(subtotal.toFixed(2));  // Update the subtotal display
+            }
+
+            // Remove item from cart
+            $('.remove-item').click(function () {
+                const itemId = $(this).data('id');
+                $.ajax({
+                    url: '/remove_product',
+                    method: 'POST',
+                    data: { id: itemId },
+                    success: function () {
+                        location.reload();  // Reload the page after item removal
+                    }
+                });
+            });
+
+            // Update quantity when input value changes
+            $('.quantity').change(function () {
+                const itemId = $(this).data('id');
+                const quantity = parseInt($(this).val());  // Ensure it's an integer
+                if (quantity >= 1) {  // Prevent quantity from going below 1
+                    $.ajax({
+                        url: '/edit_product_quantity',
+                        method: 'POST',
+                        data: { id: itemId, quantity: quantity },
+                        success: function () {
+                            updateTotal();  // Update the subtotal after changing quantity
+                        }
+                    });
+                }
+            });
+
+            // Increase quantity
+            $('.increase-quantity').click(function () {
+                const quantityInput = $(this).siblings('.quantity');
+                let quantity = parseInt(quantityInput.val());  // Ensure it's an integer
+                quantity++;
+                quantityInput.val(quantity);  // Update the input field with new quantity
+                const itemId = $(this).siblings('.quantity').data('id');
+
+                $.ajax({
+                    url: '/edit_product_quantity',
+                    method: 'POST',
+                    data: { id: itemId, quantity: quantity },
+                    success: function () {
+                        updateTotal();  // Update the subtotal after increasing quantity
+                    }
+                });
+            });
+
+            // Decrease quantity
+            $('.decrease-quantity').click(function () {
+                const quantityInput = $(this).siblings('.quantity');
+                let quantity = parseInt(quantityInput.val());  // Ensure it's an integer
+                if (quantity > 1) {  // Prevent quantity from going below 1
+                    quantity--;
+                    quantityInput.val(quantity);  // Update the input field with new quantity
+                    const itemId = $(this).siblings('.quantity').data('id');
+
+                    $.ajax({
+                        url: '/edit_product_quantity',
+                        method: 'POST',
+                        data: { id: itemId, quantity: quantity },
+                        success: function () {
+                            updateTotal();  // Update the subtotal after decreasing quantity
+                        }
+                    });
+                }
+            });
+
+            // Initialize total on page load
+            updateTotal();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Checkout</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="icon" href="images/fevicon.png" type="image/gif" />
+</head>
+
+<body class="main-layout">
+
+    <!-- Header -->
+    <header>
+        <div class="header">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col logo_section">
+                        <div class="full">
+                            <div class="center-desk">
+                                <div class="logo">
+                                    <a href="/"><img src="images/logo.png" alt="logo"></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-9 col-lg-9 col-md-9 col-sm-9">
+                        <div class="menu-area">
+                            <div class="limit-box">
+                                <nav class="main-menu">
+                                    <ul class="menu-area-main">
+                                        <li><a href="/">Home</a></li>
+                                        <li><a href="#contactejs">Contact Us</a></li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- End Header -->
+
+    <!-- Checkout Section -->
+    <div class="checkout">
+        <div class="container">
+            <h2>Checkout</h2>
+
+            <!-- Cart Table -->
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (cart && cart.length > 0) { %>  <!-- Check if cart exists and is not empty -->
+                        <% cart.forEach(item => { %>
+                            <tr>
+                                <td><img src="/images/<%= item.image %>" alt="<%= item.name %>" class="cart-item-image"></td>
+                                <td><%= item.name %></td>
+                                <td><%= item.quantity %></td>
+                                <td>$<%= parseFloat(item.price).toFixed(2) %></td>
+                                <td>$<%= (parseFloat(item.price) * item.quantity).toFixed(2) %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5">Your cart is empty.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+
+            <!-- Billing Information Form -->
+            <form action="/place_order" method="POST">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" class="form-control" id="fullName" name="fullName" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="address">Shipping Address</label>
+                    <textarea class="form-control" id="address" name="address" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="text" class="form-control" id="phone" name="phone" required>
+                </div>
+
+                <div class="cart-summary">
+                    <h3>Total: $<span id="total-price"><%= total ? total.toFixed(2) : '0.00' %></span></h3>
+                </div>
+
+                <!-- Payment Options -->
+                <div class="form-group">
+                    <label for="paymentMethod">Payment Method</label>
+                    <select class="form-control" id="paymentMethod" name="paymentMethod">
+                        <option value="creditCard">Credit Card</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="cashOnDelivery">Cash on Delivery</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success">Place Order</button>
+            </form>
+        </div>
+    </div>
+    <!-- End Checkout Section -->
+
+    <!-- Footer -->
+    <footer>
+        <div id="contact" class="footer">
+            <div class="container">
+                <div class="row pdn-top-30">
+                    <div class="col-md-12">
+                        <div class="footer-box">
+                            <div id="contactejs" class="headinga">
+                                <h3>Address</h3>
+                                <span>Cambodia , Phnom Penh</span>
+                                <p>(+855) 89428016<br>demo@gmail.com</p>
+                            </div>
+                            <ul class="location_icon">
+                                <li><a href="#"><i class="fa fa-facebook-f"></i></a></li>
+                                <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                                <li><a href="#"><i class="fa fa-instagram"></i></a></li>
+                            </ul>
+                            <div class="menu-bottom">
+                                <ul class="link">
+                                    <li> <a href="/">Home</a></li>
+                                    <li> <a href="#aboutejs">About</a></li>
+                                    <li> <a href="#brandejs">Brand</a></li>
+                                    <li> <a href="#specialejs">Specials</a></li>
+                                    <li> <a href="#contactejs">Contact us</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <div class="container">
+                    <p><a href=""> </a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- End Footer -->
+
+    <!-- JavaScript files-->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD"></script>
+
+<div id="paypal-button-container"></div>
+
+<script>
+    paypal.Buttons({
+        createOrder: function(data, actions) {
+            return fetch('/create-payment', {
+                method: 'post'
+            }).then(res => res.json()).then(orderData => {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: orderData.total  // Amount for the payment
+                        }
+                    }]
+                });
+            });
+        },
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+                alert('Payment successful! ' + details.payer.name.given_name);
+                window.location.href = '/execute-payment?token=' + data.orderID;
+            });
+        },
+        onCancel: function(data) {
+            alert('Payment was canceled!');
+        }
+    }).render('#paypal-button-container');
+</script>
+
+</body>
+
+</html>
