@@ -17,7 +17,7 @@ app.set("view engine", "ejs");
 app.listen(8080);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({ secret: "secret" }));
-
+console.log("Server is running on http://localhost:8080");
 function isProductInCart(cart, id) {
   for (var i = 0; i < cart.length; i++) {
     if (cart[i].id == id) {
@@ -26,21 +26,21 @@ function isProductInCart(cart, id) {
   }
   return false;
 }
-const paypal = require('@paypal/checkout-server-sdk');
+const paypal = require("@paypal/checkout-server-sdk");
 
 // Configure PayPal environment with your client ID and secret
 function environment() {
-    return new paypal.core.SandboxEnvironment(
-        'YOUR_CLIENT_ID',  // Replace with your PayPal sandbox client ID
-        'YOUR_CLIENT_SECRET'  // Replace with your PayPal sandbox client secret
-    );
+  return new paypal.core.SandboxEnvironment(
+    "YOUR_CLIENT_ID", // Replace with your PayPal sandbox client ID
+    "YOUR_CLIENT_SECRET" // Replace with your PayPal sandbox client secret
+  );
 }
 
 const client = new paypal.core.PayPalHttpClient(environment());
 
 function calculateTotal(cart, req) {
   if (!cart || !Array.isArray(cart)) {
-    cart = [];  // Ensure cart is always an array
+    cart = []; // Ensure cart is always an array
   }
 
   let total = 0;
@@ -52,7 +52,7 @@ function calculateTotal(cart, req) {
     }
   }
 
-  req.session.total = total;  // Store the total in the session
+  req.session.total = total; // Store the total in the session
   return total;
 }
 
@@ -94,7 +94,7 @@ app.post("/add_to_cart", function (req, res) {
   var cart = req.session.cart;
 
   if (!isProductInCart(cart, id)) {
-    cart.push(product);  // Add product to cart
+    cart.push(product); // Add product to cart
   } else {
     // Update product quantity if it already exists in cart
     for (let i = 0; i < cart.length; i++) {
@@ -104,13 +104,13 @@ app.post("/add_to_cart", function (req, res) {
     }
   }
 
-  calculateTotal(cart, req);  // Recalculate the total
+  calculateTotal(cart, req); // Recalculate the total
   res.redirect("/cart");
 });
 
 app.get("/cart", function (req, res) {
-  var cart = req.session.cart || [];  // Ensure cart is always an array
-  var total = req.session.total || 0;  // Ensure total is defined
+  var cart = req.session.cart || []; // Ensure cart is always an array
+  var total = req.session.total || 0; // Ensure total is defined
   res.render("pages/cart", { cart: cart, total: total });
 });
 
@@ -120,85 +120,87 @@ app.post("/remove_product", function (req, res) {
 
   for (let i = 0; i < cart.length; i++) {
     if (cart[i].id == id) {
-      cart.splice(i, 1);  // Remove product from cart
+      cart.splice(i, 1); // Remove product from cart
       break;
     }
   }
 
-  calculateTotal(cart, req);  // Recalculate the total
+  calculateTotal(cart, req); // Recalculate the total
   res.redirect("/cart");
 });
 app.post("/edit_product_quantity", function (req, res) {
-    var id = req.body.id;
-    var quantity = req.body.quantity;
-    var increase = req.body.increase;
-    var decrease = req.body.decrease;
-    var cart = req.session.cart;
-    if(increase_btn){
-        for (let i = 0; i < cart.length; i++) {
-            if (cart[i].id == id) {
-                if(cart[i].quantity > 0){
-                    cart[i].quantity = parseInt(cart[i].quantity) + 1;
-                }
-            }
+  var id = req.body.id;
+  var quantity = req.body.quantity;
+  var increase = req.body.increase;
+  var decrease = req.body.decrease;
+  var cart = req.session.cart;
+  if (increase_btn) {
+    for (let i = 0; i < cart.length; i++) {
+      if (cart[i].id == id) {
+        if (cart[i].quantity > 0) {
+          cart[i].quantity = parseInt(cart[i].quantity) + 1;
         }
+      }
     }
-    if(decrease_btn){
-        for (let i = 0; i < cart.length; i++) {
-            if (cart[i].id == id) {
-                if(cart[i].quantity > 1){
-                    cart[i].quantity = parseInt(cart[i].quantity) - 1;
-                }
-            }
+  }
+  if (decrease_btn) {
+    for (let i = 0; i < cart.length; i++) {
+      if (cart[i].id == id) {
+        if (cart[i].quantity > 1) {
+          cart[i].quantity = parseInt(cart[i].quantity) - 1;
         }
+      }
     }
-    calculateTotal(cart, req);  // Recalculate the total
-    res.redirect("/cart");
+  }
+  calculateTotal(cart, req); // Recalculate the total
+  res.redirect("/cart");
 });
 
-app.post('/place_order', function(req, res){
-    var name = req.body.name;
-    var email = req.body.email;
-    var phone = req.body.phone;
-    var city = req.body.city;
-    var address = req.body.address;
-    var cost = req.session.total;
-    var status = "not paid";
-    var date = new Date();
-    var products_ids = "";
+app.post("/place_order", function (req, res) {
+  var name = req.body.name;
+  var email = req.body.email;
+  var phone = req.body.phone;
+  var city = req.body.city;
+  var address = req.body.address;
+  var cost = req.session.total;
+  var status = "not paid";
+  var date = new Date();
+  var products_ids = "";
 
-    var con = mysql.createConnection({
-        host: "localhost",
-        user: "root",
-        password: "root",
-        database: "phone_shop",
+  var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "root",
+    database: "phone_shop",
+  });
+  var cart = req.session.cart;
+  for (let i = 0; i < cart.length; i++) {
+    products_ids = products_ids + "," + cart[i].id;
+  }
+  con.connect((err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      var query =
+        "INSERT INTO orders (name, email, phone, city, address, cost, status, date,products_ids) VALUES ?";
+      var values = [
+        [name, email, phone, city, address, cost, status, date, products_ids],
+      ];
+      con.query(query, [values], (err, result) => {
+        res.redirect("/payment");
       });
-    var cart = req.session.cart;
-    for(let i = 0; i < cart.length; i++){
-        products_ids = products_ids + "," +cart[i].id ;
-    }   
-    con.connect((err) => {  
-        if (err){
-            console.log(err);
-        }else{  
-            var query = "INSERT INTO orders (name, email, phone, city, address, cost, status, date,products_ids) VALUES ?";
-            var values = [[name, email, phone, city, address, cost, status, date,products_ids]];
-            con.query(query, [values], (err, result) => {
-               res.redirect('/payment');
-            });
-        }
-    });
-
+    }
+  });
 });
 app.get("/payment", function (req, res) {
-    res.render("pages/payment");
+  res.render("pages/payment");
 });
 app.get("/checkout", function (req, res) {
   // Ensure cart exists in session
   const cart = req.session.cart || [];
 
   // Calculate total price for the cart
-  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   // Render the checkout page with cart and total
   res.render("pages/checkout", { cart: cart, total: total });
