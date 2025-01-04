@@ -33,7 +33,9 @@
                             <div class="limit-box">
                                 <nav class="main-menu">
                                     <ul class="menu-area-main">
-                                        <li> <a href="/">Home</a> </li>
+                                        <li> <a href="/" id="reset-cart-link">Home</a> </li>
+                                        
+
                                         <li><a href="#contactejs">Contact Us</a></li>
                                     </ul>
                                 </nav>
@@ -79,11 +81,17 @@
                         <td><%= item.name %></td>
                         <td>
                             <button class="btn btn-sm btn-secondary decrease-quantity">-</button>
-                            <input type="number" class="form-control quantity" value="<%= item.quantity %>" min="1" data-price="<%= item.price %>" data-id="<%= item.id %>">
+                            <input type="number" class="form-control quantity" value="<%= item.quantity %>" min="1" 
+                                   data-price="<%= item.sale_price ? item.sale_price : item.price %>" 
+                                   data-id="<%= item.id %>">
                             <button class="btn btn-sm btn-secondary increase-quantity">+</button>
                         </td>
-                        <td>$<%= parseFloat(item.price).toFixed(2) %></td>
-                        <td class="item-total">$<%= (parseFloat(item.price) * item.quantity).toFixed(2) %></td>
+                        <td>
+                            $<%= item.sale_price ? parseFloat(item.sale_price).toFixed(2) : parseFloat(item.price).toFixed(2) %>
+                        </td>
+                        <td class="item-total">
+                            $<%= ((item.sale_price ? parseFloat(item.sale_price) : parseFloat(item.price)) * item.quantity).toFixed(2) %>
+                        </td>
                         <td>
                             <button class="btn btn-danger remove-item" data-id="<%= item.id %>">Remove</button>
                         </td>
@@ -110,7 +118,7 @@
                         <div class="footer-box">
                             <div id="contactejs" class="headinga">
                                 <h3>Address</h3>
-                                <span>Cambodia , phnom penh</span>
+                                <span>Cambodia, Phnom Penh</span>
                                 <p>(+855) 89428016<br>demo@gmail.com</p>
                             </div>
                             <ul class="location_icon">
@@ -143,23 +151,21 @@
     <!-- JavaScript files-->
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
-
     <script>
         $(document).ready(function () {
-
             // Function to update the total price dynamically
             function updateTotal() {
                 let subtotal = 0;
                 $('.cart-item').each(function () {
-                    const quantity = parseInt($(this).find('.quantity').val());  // Ensure it's an integer
-                    const price = parseFloat($(this).find('.quantity').data('price'));  // Ensure it's a float
-                    const total = price * quantity;  // Correctly calculate the total price for the item
-                    $(this).find('.item-total').text('$' + total.toFixed(2));  // Update the item total display
-                    subtotal += total;  // Add to subtotal
+                    const quantity = parseInt($(this).find('.quantity').val());
+                    const price = parseFloat($(this).find('.quantity').data('price'));
+                    const total = price * quantity;
+                    $(this).find('.item-total').text('$' + total.toFixed(2));
+                    subtotal += total;
                 });
-                $('#subtotal').text(subtotal.toFixed(2));  // Update the subtotal display
+                $('#subtotal').text(subtotal.toFixed(2));
             }
-
+    
             // Remove item from cart
             $('.remove-item').click(function () {
                 const itemId = $(this).data('id');
@@ -168,69 +174,100 @@
                     method: 'POST',
                     data: { id: itemId },
                     success: function () {
-                        location.reload();  // Reload the page after item removal
+                        location.reload();
                     }
                 });
             });
-
+    
             // Update quantity when input value changes
             $('.quantity').change(function () {
                 const itemId = $(this).data('id');
-                const quantity = parseInt($(this).val());  // Ensure it's an integer
-                if (quantity >= 1) {  // Prevent quantity from going below 1
+                const quantity = parseInt($(this).val());
+                if (quantity >= 1) {
                     $.ajax({
                         url: '/edit_product_quantity',
                         method: 'POST',
                         data: { id: itemId, quantity: quantity },
                         success: function () {
-                            updateTotal();  // Update the subtotal after changing quantity
+                            updateTotal();
                         }
                     });
                 }
             });
-
+    
             // Increase quantity
             $('.increase-quantity').click(function () {
                 const quantityInput = $(this).siblings('.quantity');
-                let quantity = parseInt(quantityInput.val());  // Ensure it's an integer
+                let quantity = parseInt(quantityInput.val());
                 quantity++;
-                quantityInput.val(quantity);  // Update the input field with new quantity
+                quantityInput.val(quantity);
                 const itemId = $(this).siblings('.quantity').data('id');
-
+    
                 $.ajax({
                     url: '/edit_product_quantity',
                     method: 'POST',
-                    data: { id: itemId, quantity: quantity },
+                    data: { id: itemId, quantity: quantity, increase: true },
                     success: function () {
-                        updateTotal();  // Update the subtotal after increasing quantity
+                        updateTotal();
                     }
                 });
             });
-
+    
             // Decrease quantity
             $('.decrease-quantity').click(function () {
                 const quantityInput = $(this).siblings('.quantity');
-                let quantity = parseInt(quantityInput.val());  // Ensure it's an integer
-                if (quantity > 1) {  // Prevent quantity from going below 1
+                let quantity = parseInt(quantityInput.val());
+                if (quantity > 1) {
                     quantity--;
-                    quantityInput.val(quantity);  // Update the input field with new quantity
+                    quantityInput.val(quantity);
                     const itemId = $(this).siblings('.quantity').data('id');
-
+    
                     $.ajax({
                         url: '/edit_product_quantity',
                         method: 'POST',
-                        data: { id: itemId, quantity: quantity },
+                        data: { id: itemId, quantity: quantity, decrease: true },
                         success: function () {
-                            updateTotal();  // Update the subtotal after decreasing quantity
+                            updateTotal();
                         }
                     });
                 }
             });
-
+    
             // Initialize total on page load
             updateTotal();
         });
+        $(document).ready(function () {
+    // Clear cart when Home link is clicked
+    $('#reset-cart-link').click(function (e) {
+        e.preventDefault();  // Prevent default link behavior (going to home immediately)
+        
+        // Clear cart data from sessionStorage or localStorage (if you're using them)
+        sessionStorage.removeItem('cart'); // Example for sessionStorage
+        localStorage.removeItem('cart');   // Example for localStorage
+
+        // Optionally reset cart display here if you want to do it on the frontend
+        $('.cart-item').remove(); // This will remove all items from the cart display
+        
+        // Redirect to home after clearing the cart
+        window.location.href = '/';
+    });
+});
+$('#reset-cart-link').click(function (e) {
+    e.preventDefault();
+    
+    // Send request to clear the cart
+    $.ajax({
+        url: '/reset_cart',
+        method: 'POST',
+        success: function () {
+            location.reload();  // Reload the page after cart reset
+        }
+    });
+});
+
+
     </script>
+    
 </body>
 
 </html>

@@ -2,12 +2,13 @@ var express = require("express");
 var ejs = require("ejs");
 var mysql = require("mysql");
 var session = require("express-session");
-
-mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "root",
-  database: "phone_shop",
+var dotenv = require('dotenv')
+dotenv.config();
+var con = mysql.createConnection({
+  host:process.env.HOST,
+  user:process.env.USER,
+  password:process.env.PASSWORD,
+  database:process.env.DATABASE,
 }); // Recommended to use pool
 
 var bodyParser = require("body-parser");
@@ -26,17 +27,7 @@ function isProductInCart(cart, id) {
   }
   return false;
 }
-const paypal = require("@paypal/checkout-server-sdk");
 
-// Configure PayPal environment with your client ID and secret
-function environment() {
-  return new paypal.core.SandboxEnvironment(
-    "YOUR_CLIENT_ID", // Replace with your PayPal sandbox client ID
-    "YOUR_CLIENT_SECRET" // Replace with your PayPal sandbox client secret
-  );
-}
-
-const client = new paypal.core.PayPalHttpClient(environment());
 
 function calculateTotal(cart, req) {
   if (!cart || !Array.isArray(cart)) {
@@ -57,11 +48,11 @@ function calculateTotal(cart, req) {
 }
 
 app.get("/", function (req, res) {
-  var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "root",
-    database: "phone_shop",
+  var con =  mysql.createConnection({
+    host:process.env.HOST,
+    user:process.env.USER,
+    password:process.env.PASSWORD,
+    database:process.env.DATABASE,
   });
 
   con.query("SELECT * FROM products", (err, result) => {
@@ -134,27 +125,32 @@ app.post("/edit_product_quantity", function (req, res) {
   var increase = req.body.increase;
   var decrease = req.body.decrease;
   var cart = req.session.cart;
-  if (increase_btn) {
+
+  if (increase) {
     for (let i = 0; i < cart.length; i++) {
       if (cart[i].id == id) {
-        if (cart[i].quantity > 0) {
-          cart[i].quantity = parseInt(cart[i].quantity) + 1;
-        }
+        cart[i].quantity++; // Increase quantity
+      }
+    }
+  } else if (decrease) {
+    for (let i = 0; i < cart.length; i++) {
+      if (cart[i].id == id && cart[i].quantity > 1) {
+        cart[i].quantity--; // Decrease quantity
+      }
+    }
+  } else {
+    // If just the quantity was updated without increase/decrease
+    for (let i = 0; i < cart.length; i++) {
+      if (cart[i].id == id) {
+        cart[i].quantity = quantity; // Update to new quantity
       }
     }
   }
-  if (decrease_btn) {
-    for (let i = 0; i < cart.length; i++) {
-      if (cart[i].id == id) {
-        if (cart[i].quantity > 1) {
-          cart[i].quantity = parseInt(cart[i].quantity) - 1;
-        }
-      }
-    }
-  }
+
   calculateTotal(cart, req); // Recalculate the total
-  res.redirect("/cart");
+  res.send({ status: 'success' }); // Send success response
 });
+
 
 app.post("/place_order", function (req, res) {
   var name = req.body.name;
@@ -168,11 +164,11 @@ app.post("/place_order", function (req, res) {
   var products_ids = "";
 
   var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "root",
-    database: "phone_shop",
-  });
+  host:process.env.HOST,
+  user:process.env.USER,
+  password:process.env.PASSWORD,
+  database:process.env.DATABASE,
+});
   var cart = req.session.cart;
   for (let i = 0; i < cart.length; i++) {
     products_ids = products_ids + "," + cart[i].id;
@@ -205,3 +201,9 @@ app.get("/checkout", function (req, res) {
   // Render the checkout page with cart and total
   res.render("pages/checkout", { cart: cart, total: total });
 });
+// Route to clear the cart and redirect to home
+app.post('/reset_cart', (req, res) => {
+  req.session.cart = [];  // Clear the cart in session
+  res.redirect('/');  // Redirect to home page
+});
+
