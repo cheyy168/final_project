@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #2c3e50; /* Dark blue background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .error-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .error-icon {
+            background-color: #dc3545; /* Red background for error icon */
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+        }
+
+        .error-text h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .error-text p {
+            font-size: 1rem;
+            color: #555;
+        }
+
+        .btn-retry {
+            margin-top: 20px;
+            font-size: 1rem;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-card">
+        <div class="error-icon">
+            <i class="fas fa-times"></i> <!-- Cross icon for failure -->
+        </div>
+        <div class="error-text">
+            <h1>Payment Failed</h1>
+            <p>Unfortunately, your payment was unsuccessful. Please check your funds or try again.</p>
+        </div>
+        <!-- Retry or redirect to home page -->
+        <a href="/" class="btn btn-danger btn-retry">Go Back to Home</a>
+    </div>
+   
+    <!-- Bootstrap -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

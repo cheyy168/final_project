@@ -153,41 +153,87 @@ app.post("/edit_product_quantity", function (req, res) {
 
 
 app.post("/place_order", function (req, res) {
-  var name = req.body.name;
+  
   var email = req.body.email;
   var phone = req.body.phone;
-  var city = req.body.city;
+ 
   var address = req.body.address;
   var cost = req.session.total;
-  var status = "not paid";
+ 
   var date = new Date();
   var products_ids = "";
 
-  var con = mysql.createConnection({
-  host:process.env.HOST,
-  user:process.env.USER,
-  password:process.env.PASSWORD,
-  database:process.env.DATABASE,
-});
-  var cart = req.session.cart;
-  for (let i = 0; i < cart.length; i++) {
-    products_ids = products_ids + "," + cart[i].id;
+  var cart = req.session.cart || [];  // Ensure cart is an empty array if undefined
+
+  if (cart.length === 0) {
+      return res.status(400).send("Your cart is empty. Please add products before placing an order.");
   }
+
+  // Loop through the cart to collect product IDs
+  for (let i = 0; i < cart.length; i++) {
+      products_ids += "," + cart[i].id;
+  }
+
+  // Remove leading comma
+  products_ids = products_ids.substring(1);
+
+  var con = mysql.createConnection({
+      host: process.env.HOST,
+      user: process.env.USER,
+      password: process.env.PASSWORD,
+      database: process.env.DATABASE,
+  });
+
   con.connect((err) => {
-    if (err) {
-      console.log(err);
-    } else {
+      if (err) {
+          console.log(err);
+          res.status(500).send("Error connecting to the database.");
+          return;
+      }
+
       var query =
-        "INSERT INTO orders (name, email, phone, city, address, cost, status, date,products_ids) VALUES ?";
+          "INSERT INTO clientOrders ( email, phone, address, totalAmount, date) VALUES ?";
       var values = [
-        [name, email, phone, city, address, cost, status, date, products_ids],
+          [ email, phone,address, cost, date],
       ];
+
       con.query(query, [values], (err, result) => {
-        res.redirect("/payment");
+          if (err) {
+              console.error("Error executing order query:", err);
+              res.status(500).send("Error placing the order.");
+              return;
+          }
+
+          // Insert order details into clientOrderDetails table
+          var orderId = result.insertId;  // Get the last inserted order ID
+          var orderDetails = [];
+
+          for (let i = 0; i < cart.length; i++) {
+              orderDetails.push([
+                  orderId, 
+                  cart[i].id, 
+                  cart[i].image, 
+                  (cart[i].sale_price || cart[i].price) * cart[i].quantity, 
+                  cart[i].quantity
+              ]);
+          }
+
+          var queryDetails = 
+              "INSERT INTO clientOrderDetails (orderId, productId, image, total, quantity) VALUES ?";
+
+          con.query(queryDetails, [orderDetails], (err, result) => {
+              if (err) {
+                  console.error("Error inserting order details:", err);
+                  res.status(500).send("Error inserting order details.");
+                  return;
+              }
+              res.redirect("/payment");  // Redirect to payment page
+          });
       });
-    }
   });
 });
+
+
 
 app.get("/checkout", function (req, res) {
   // Ensure cart exists in session
@@ -239,6 +285,7 @@ app.post("/payment_success", function (req, res) {
   });
 });
 app.get("/order_confirmation", function (req, res) {
+  
   res.render("pages/order_confirmation");
 });
 app.get('/payment', (req, res) => {
@@ -251,3 +298,7 @@ app.get('/payment', (req, res) => {
       total: total
   });
 });
+app.get('/payment_failed', function (req, res) {
+    res.render('pages/payment_failed');
+});
+

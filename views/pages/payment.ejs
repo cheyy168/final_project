@@ -109,14 +109,17 @@
                 });
             },
             onCancel: function(data) {
-                alert('Payment was canceled.');
+                alert('Payment was canceled. Please ensure you have sufficient funds in your PayPal account.');
+                window.location.href = '/payment_failed'; // Redirect to a payment failed page
             },
             onError: function(err) {
                 console.error('PayPal error:', err);
-                alert('An error occurred during the payment process.');
+                alert('An error occurred during the payment process. Please try again later.');
+                window.location.href = '/payment_failed'; // Redirect to a payment failed page
             }
         }).render('#paypal-button-container');
     </script>
+    
 
     <script src="/js/jquery.min.js"></script>
     <script src="/js/bootstrap.bundle.min.js"></script>
