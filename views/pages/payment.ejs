@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3 logo_section">
+                        <div class="logo">
+                            <a href="/"><img src="/images/logo.png" alt="logo"></a>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <nav class="main-menu">
+                            <ul class="menu-area-main">
+                                <li><a href="/">Home</a></li>
+                                <li><a href="#contact">Contact Us</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- End Header -->
+
+    <div class="container mt-5">
+        <h2 class="text-center">Payment</h2>
+        <p class="text-center">Review your order and proceed with payment.</p>
+
+        <!-- Cart Summary -->
+        <div class="cart-summary">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (cart && cart.length > 0) { %>
+                        <% cart.forEach(item => { %>
+                            <tr>
+                                <td><img src="/images/<%= item.image %>" alt="<%= item.name %>" class="cart-item-image"></td>
+                                <td><%= item.name %></td>
+                                <td><%= item.quantity %></td>
+                                <td>$<%= item.sale_price ? parseFloat(item.sale_price).toFixed(2) : parseFloat(item.price).toFixed(2) %></td>
+                                <td>$<%= item.sale_price 
+                                    ? (parseFloat(item.sale_price) * item.quantity).toFixed(2) 
+                                    : (parseFloat(item.price) * item.quantity).toFixed(2) %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center">Your cart is empty.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <h3 class="text-right">Total: $<%= total ? total.toFixed(2) : '0.00' %></h3>
+        </div>
+
+        <!-- PayPal Payment -->
+        <div id="paypal-button-container" class="text-center mt-4"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <p>&copy; 2025 Phone Store. All rights reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- End Footer -->
+   
+    <!-- PayPal JavaScript SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AVOpStabu5eQKt0S3AKAILLMNerwK63z6qmJIsZZcEQKNpIqAnlksQveO_eqC0j0UamuItUEEnSHthkh&currency=USD"></script>
+    <script>
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: '<%= total ? total.toFixed(2) : "10.00" %>'
+                        }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    alert('Payment successful! Thank you, ' + details.payer.name.given_name + '.');
+                    window.location.href = '/order_confirmation';
+                });
+            },
+            onCancel: function(data) {
+                alert('Payment was canceled.');
+            },
+            onError: function(err) {
+                console.error('PayPal error:', err);
+                alert('An error occurred during the payment process.');
+            }
+        }).render('#paypal-button-container');
+    </script>
+
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

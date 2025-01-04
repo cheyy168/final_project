@@ -33,7 +33,7 @@
                             <div class="limit-box">
                                 <nav class="main-menu">
                                     <ul class="menu-area-main">
-                                        <li><a href="/">Home</a></li>
+                                        <li><a href="/" id="reset-cart-link">Back to Home page</a></li>
                                         <li><a href="#contactejs">Contact Us</a></li>
                                     </ul>
                                 </nav>
@@ -69,8 +69,15 @@
                                 <td><img src="/images/<%= item.image %>" alt="<%= item.name %>" class="cart-item-image"></td>
                                 <td><%= item.name %></td>
                                 <td><%= item.quantity %></td>
-                                <td>$<%= parseFloat(item.price).toFixed(2) %></td>
-                                <td>$<%= (parseFloat(item.price) * item.quantity).toFixed(2) %></td>
+                                <td>
+                                    $<%= item.sale_price ? parseFloat(item.sale_price).toFixed(2) : parseFloat(item.price).toFixed(2) %>
+                                </td>
+                                <td>
+                                    $<%= item.sale_price 
+                                        ? (parseFloat(item.sale_price) * item.quantity).toFixed(2) 
+                                        : (parseFloat(item.price) * item.quantity).toFixed(2) 
+                                    %>
+                                </td>
                             </tr>
                         <% }); %>
                     <% } else { %>
@@ -79,6 +86,7 @@
                         </tr>
                     <% } %>
                 </tbody>
+                
             </table>
 
             <!-- Billing Information Form -->
@@ -162,35 +170,38 @@
     <!-- JavaScript files-->
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD"></script>
-
-<div id="paypal-button-container"></div>
-
+    
 <script>
-    paypal.Buttons({
-        createOrder: function(data, actions) {
-            return fetch('/create-payment', {
-                method: 'post'
-            }).then(res => res.json()).then(orderData => {
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: {
-                            value: orderData.total  // Amount for the payment
-                        }
-                    }]
-                });
-            });
-        },
-        onApprove: function(data, actions) {
-            return actions.order.capture().then(function(details) {
-                alert('Payment successful! ' + details.payer.name.given_name);
-                window.location.href = '/execute-payment?token=' + data.orderID;
-            });
-        },
-        onCancel: function(data) {
-            alert('Payment was canceled!');
+   
+    $(document).ready(function () {
+    // Clear cart when Home link is clicked
+    $('#reset-cart-link').click(function (e) {
+        e.preventDefault();  // Prevent default link behavior (going to home immediately)
+        
+        // Clear cart data from sessionStorage or localStorage (if you're using them)
+        sessionStorage.removeItem('cart'); // Example for sessionStorage
+        localStorage.removeItem('cart');   // Example for localStorage
+
+        // Optionally reset cart display here if you want to do it on the frontend
+        $('.cart-item').remove(); // This will remove all items from the cart display
+        
+        // Redirect to home after clearing the cart
+        window.location.href = '/';
+    });
+});
+$('#reset-cart-link').click(function (e) {
+    e.preventDefault();
+    
+    // Send request to clear the cart
+    $.ajax({
+        url: '/reset_cart',
+        method: 'POST',
+        success: function () {
+            location.reload();  // Reload the page after cart reset
         }
-    }).render('#paypal-button-container');
+    });
+});
+
 </script>
 
 </body>

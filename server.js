@@ -188,22 +188,66 @@ app.post("/place_order", function (req, res) {
     }
   });
 });
-app.get("/payment", function (req, res) {
-  res.render("pages/payment");
-});
+
 app.get("/checkout", function (req, res) {
   // Ensure cart exists in session
   const cart = req.session.cart || [];
 
   // Calculate total price for the cart
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cart.reduce((sum, item) => {
+    return sum + (item.sale_price || item.price) * item.quantity;
+  }, 0);
 
   // Render the checkout page with cart and total
   res.render("pages/checkout", { cart: cart, total: total });
 });
+
 // Route to clear the cart and redirect to home
 app.post('/reset_cart', (req, res) => {
   req.session.cart = [];  // Clear the cart in session
   res.redirect('/');  // Redirect to home page
 });
+app.post("/payment_success", function (req, res) {
+  const orderId = req.body.orderId;  // The order ID from the session or frontend
+  const paymentStatus = 'paid'; // Update status to 'paid'
+  const paymentDate = new Date(); // Current date as payment date
 
+  // Update order status in the database
+  var con = mysql.createConnection({
+    host: process.env.HOST,
+    user: process.env.USER,
+    password: process.env.PASSWORD,
+    database: process.env.DATABASE,
+  });
+
+  con.connect((err) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("Error processing payment");
+    } else {
+      var query = "UPDATE orders SET status = ?, payment_date = ? WHERE id = ?";
+      con.query(query, [paymentStatus, paymentDate, orderId], (err, result) => {
+        if (err) {
+          console.log(err);
+          res.status(500).send("Error updating order status");
+        } else {
+          // After updating the order, redirect to the confirmation page
+          res.redirect("/order_confirmation");
+        }
+      });
+    }
+  });
+});
+app.get("/order_confirmation", function (req, res) {
+  res.render("pages/order_confirmation");
+});
+app.get('/payment', (req, res) => {
+  // Assuming cart is stored in session
+  const cart = req.session.cart || [];
+  const total = req.session.total || 0;
+
+  res.render('pages/payment', {
+      cart: cart,
+      total: total
+  });
+});
